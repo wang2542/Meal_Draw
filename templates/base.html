@@ -16,10 +16,10 @@
 <div class="d-flex flex-column flex-md-row align-items-center p-3 px-md-4 mb-3 bg-white border-bottom box-shadow">
     <h5 class="my-0 mr-md-auto font-weight-normal">LuckyDraw</h5>
     <nav class="my-2 my-md-0 mr-md-3">
-        <a class="btn btn-outline-primary" href="/">Start</a>
-        <a class="btn btn-outline-fix  text-dark" href="/top">Top 5</a>
-        <a class="btn btn-outline-fix text-dark" href="/restaurants">Restaurants</a>
-        <a class="btn btn-outline-fix text-dark" href="/history">History</a>
+        <a class="btn {% if nav == 'start' %}btn-outline-primary {% else %} btn-outline-fix text-dark{% endif %}" href="/">Start</a>
+        <a class="btn {% if nav == 'top' %}btn-outline-primary {% else %} btn-outline-fix text-dark{% endif %}" href="/top">Top 5</a>
+        <a class="btn {% if nav == 'restaurant' %}btn-outline-primary {% else %} btn-outline-fix text-dark{% endif %}" href="/restaurants">Restaurants</a>
+        <a class="btn {% if nav == 'history' %}btn-outline-primary {% else %} btn-outline-fix text-dark{% endif %}" href="/history">History</a>
     </nav>
 </div>
 

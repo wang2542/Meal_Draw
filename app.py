@@ -1,6 +1,8 @@
 from flask import Flask, render_template, request, redirect
 from database import db_session, init_db
+from sqlalchemy import desc
 from models.restaurants import Restaurants
+from models.histories import Histories
 import datetime
 from random import choice
 
@@ -24,7 +26,7 @@ def shutdown_session(exception=None):
 def start():
     now = datetime.datetime.now()
     # 获取系统时间 ex:2019-06-19 15:53:56.452153 然后添加过滤器
-    return render_template('start.html', now=now)
+    return render_template('start.html',nav='start', now=now)
 
 
 @app.route('/draw')
@@ -36,13 +38,23 @@ def draw():
 
     random_restaurant = choice(restaurants)
 
-    restaurant = Restaurants.query.get(random_restaurant.id)
-    restaurant.draw = restaurant.draw + 1
+    try:
+        restaurant = Restaurants.query.get(random_restaurant.id)
+        restaurant.draw += 1
 
-    db_session.commit()
+        history = Histories(restaurant_id=restaurant.id)
+
+        db_session.add(history)
+        db_session.commit()
+
+    except:
+        db_session.rollback()
+        return redirect('/')
 
     now = datetime.datetime.now()
+
     return render_template('draw.html', restaurant=restaurant, now=now)
+
 
 @app.route('/create-restaurant', methods=['GET', 'POST'])
 # 如果后面没有跟method 默认为GET
@@ -71,7 +83,7 @@ def create_restaurant():
 def restaurant_list():
     restaurants = Restaurants.query.all()
 
-    return render_template('restaurant.html', restaurants=restaurants)
+    return render_template('restaurant.html', nav='restaurant', restaurants=restaurants)
 
 
 @app.route('/edit-restaurant', methods=['GET', 'POST'])
@@ -114,6 +126,21 @@ def delete_restaurant():
     return redirect('/restaurants')
 
 
+@app.route('/history')
+def history():
+    histories = Histories.query.order_by(desc(Histories.created_time)).limit(20)
+
+    return render_template('history.html', nav='history' , histories=histories)
+
+
+@app.route('/top')
+def top():
+    restaurants = Restaurants.query.order_by(desc('draw')).limit(5)
+    # 用draw来排序 没有-的话 就是有最小排到最大 -draw就是最大到最小
+
+    return render_template('top.html', nav='top', restaurants=restaurants)
+
+
 def mealformat(value):
     # 主页的时间 进行文字处理
     if value.hour in [4, 5, 6, 8, 9]:
@@ -126,7 +153,12 @@ def mealformat(value):
         return 'Supper'
 
 
+def datetimeformat(value):
+    return value.strftime('%Y-%m-%d %H:%M:%S')
+
+
 app.jinja_env.filters['meal'] = mealformat
+app.jinja_env.filters['datetime'] = datetimeformat
 
 if __name__ == '__main__':
     app.jinja_env.auto_reload = True
